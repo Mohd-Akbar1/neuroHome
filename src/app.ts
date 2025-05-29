@@ -19,9 +19,9 @@ const io = new Server(server, {
 
 
 let bulbState = {
-  kitchen: false,
-  bedroom: false,
-  hall: false,
+  kitchen: true,
+  bedroom: true,
+  hall: true,
 };
 
 //  broadcast latest bulb state to all clients
