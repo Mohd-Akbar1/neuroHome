@@ -17,27 +17,20 @@ const io = new Server(server, {
   },
 });
 
-
 let bulbState = {
   kitchen: true,
   bedroom: true,
   hall: true,
 };
 
-//  broadcast latest bulb state to all clients
-function broadcastState(state: {
-  kitchen: boolean;
-  bedroom: boolean;
-  hall: boolean;
-}) {
+// Broadcast latest bulb state to all connected clients
+function broadcastState(state: typeof bulbState) {
   io.emit('bulb-state', state);
 }
 
-// 🔌 Socket.IO connection
+// SOCKET.IO: Send initial state + handle disconnect
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-
-  // Send current bulb state to the newly connected client
   socket.emit('bulb-state', bulbState);
 
   socket.on('disconnect', () => {
@@ -47,38 +40,26 @@ io.on('connection', (socket) => {
 
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!');
+  res.send('Smart Home API is live!');
 });
 
-
-function extractBulbName(text: string): 'kitchen' | 'bedroom' | 'hall' | null {
-  const lc = text.toLowerCase();
-  if (lc.includes('kitchen')) return 'kitchen';
-  if (lc.includes('bedroom')) return 'bedroom';
-  if (lc.includes('hall')) return 'hall';
-  return null;
-}
-
-app.post('/api/voice-command', async (req: Request, res: Response): Promise<void> => {
+// Voice command API 
+app.post('/api/voice-command', async (req: Request, res: Response) => {
   try {
     let { bulb, action } = req.body as { bulb: string; action: string };
 
- 
-    if (!['kitchen', 'bedroom', 'hall'].includes(bulb)) {
-      const extracted = extractBulbName(bulb);
-      if (extracted) bulb = extracted;
-    }
+    bulb = extractBulbName(bulb) || bulb;
+    const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
+    const isValidAction = ['on', 'off'].includes(action);
 
-    if (!['kitchen', 'bedroom', 'hall'].includes(bulb) || !['on', 'off'].includes(action)) {
+    if (!isValidRoom || !isValidAction) {
       res.status(400).json({ message: 'Invalid command' });
       return;
     }
 
-    const isOn = action === 'on';
-
     bulbState = {
       ...bulbState,
-      [bulb]: isOn,
+      [bulb]: action === 'on',
     };
 
     broadcastState(bulbState);
@@ -91,12 +72,9 @@ app.post('/api/voice-command', async (req: Request, res: Response): Promise<void
 });
 
 
-
-app.post('/webhook', async (req: Request, res: Response): Promise<void> => {
+app.post('/webhook', async (req: Request, res: Response) => {
   try {
     const { transcript } = req.body;
-
-    console.log(transcript);
 
     if (!transcript || typeof transcript !== 'string') {
       res.status(400).json({ message: 'Invalid request: transcript missing' });
@@ -105,14 +83,9 @@ app.post('/webhook', async (req: Request, res: Response): Promise<void> => {
 
     const lower = transcript.toLowerCase();
 
-    // Extract bulb name
-    let bulb: 'kitchen' | 'bedroom' | 'hall' | null = null;
-    if (lower.includes('kitchen')) bulb = 'kitchen';
-    else if (lower.includes('bedroom')) bulb = 'bedroom';
-    else if (lower.includes('hall')) bulb = 'hall';
-
-    // Extract action
+    const bulb = extractBulbName(lower);
     let action: 'on' | 'off' | null = null;
+
     if (lower.includes('turn on') || lower.includes('switch on')) action = 'on';
     else if (lower.includes('turn off') || lower.includes('switch off')) action = 'off';
 
@@ -121,13 +94,12 @@ app.post('/webhook', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-  
     bulbState = {
       ...bulbState,
       [bulb]: action === 'on',
     };
 
-    await broadcastState(bulbState);
+    broadcastState(bulbState);
 
     res.json({ success: true, state: bulbState });
   } catch (err) {
@@ -136,6 +108,14 @@ app.post('/webhook', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+function extractBulbName(text: string): 'kitchen' | 'bedroom' | 'hall' | null {
+  const lc = text.toLowerCase();
+  if (lc.includes('kitchen')) return 'kitchen';
+  if (lc.includes('bedroom')) return 'bedroom';
+  if (lc.includes('hall')) return 'hall';
+  return null;
+}
 
 
-server.listen(8001, () => console.log('Server running on http://localhost:8000'));
+const PORT = process.env.PORT || 8001;
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
