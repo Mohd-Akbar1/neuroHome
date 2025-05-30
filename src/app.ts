@@ -17,12 +17,11 @@ const io = new Server(server, {
   },
 });
 
-let bulbState = {
+let bulbState: Record<string, boolean> = {
   kitchen: true,
   bedroom: true,
   hall: true,
 };
-
 // Broadcast latest bulb state to all connected clients
 function broadcastState(state: typeof bulbState) {
   io.emit('bulb-state', state);
@@ -44,19 +43,24 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Smart Home API is live!');
 });
 
-// Voice command API 
-app.post('/api/voice-command', async (req: Request, res: Response) => {
+app.post('/api/voice-command', async (req:Request, res:Response):Promise<any> => {
   try {
-    console.log("data",req.body)
-    let { bulb, action } = req.body as { bulb: string; action: string };
+    const toolCall = req.body?.message?.toolCalls?.[0];
+
+    if (!toolCall || !toolCall.function?.arguments) {
+      return res.status(400).json({ message: 'Invalid function call structure' });
+    }
+
+    const args = JSON.parse(toolCall.function.arguments);
+    console.log('args', args);
+    let { bulb, action } = args;
 
     bulb = extractBulbName(bulb) || bulb;
     const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
     const isValidAction = ['on', 'off'].includes(action);
 
     if (!isValidRoom || !isValidAction) {
-      res.status(400).json({ message: 'Invalid command' });
-      return;
+      return res.status(400).json({ message: 'Invalid bulb or action' });
     }
 
     bulbState = {
@@ -65,14 +69,18 @@ app.post('/api/voice-command', async (req: Request, res: Response) => {
     };
 
     broadcastState(bulbState);
-console.log("request sent")
-    res.json({ success: true, state: bulbState });
-  } catch (err) {
-    console.error(err);
+
+    return res.json({
+      success: true,
+      state: bulbState,
+      message: `Turned ${action} the ${bulb} light.`,
+    });
+
+  } catch (error) {
+    console.error('Error processing Vapi request:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
 
 app.post('/webhook', async (req: Request, res: Response) => {
   try {
