@@ -47,6 +47,7 @@ app.get('/', (req: Request, res: Response) => {
 // Voice command API 
 app.post('/api/voice-command', async (req: Request, res: Response) => {
   try {
+    console.log("data",req.body)
     let { bulb, action } = req.body as { bulb: string; action: string };
 
     bulb = extractBulbName(bulb) || bulb;
@@ -64,7 +65,7 @@ app.post('/api/voice-command', async (req: Request, res: Response) => {
     };
 
     broadcastState(bulbState);
-
+console.log("request sent")
     res.json({ success: true, state: bulbState });
   } catch (err) {
     console.error(err);
