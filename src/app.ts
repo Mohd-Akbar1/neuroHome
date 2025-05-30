@@ -28,6 +28,7 @@ function broadcastState(state: typeof bulbState) {
   io.emit('bulb-state', state);
 }
 
+
 // SOCKET.IO: Send initial state + handle disconnect
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
