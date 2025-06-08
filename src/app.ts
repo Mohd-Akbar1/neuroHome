@@ -3,6 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { json } from 'stream/consumers';
 dotenv.config();
 
 const app = express();
@@ -45,27 +46,11 @@ app.get('/', (req: Request, res: Response) => {
 
 app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
   try {
-    const toolCall = req.body;
-    console.log('Vapi tool call:', toolCall);
+    const { bulb, action } = req.body;
+    console.log("data body",JSON.stringify(req.body))
 
-    if (!toolCall || !toolCall.arguments) {
-      return res.status(400).json({ message: 'Invalid tool call structure' });
-    }
+    console.log('Received from Vapi:', { bulb, action });
 
-    // Parse arguments - it might be a string or object
-    let args: any;
-    if (typeof toolCall.arguments === 'string') {
-      args = JSON.parse(toolCall.arguments);
-    } else {
-      args = toolCall.arguments;
-    }
-
-    console.log('Vapi tool call args:', args);
-
-    let { bulb, action } = args;
-
-    // Sanitize/clean input
-    bulb = extractBulbName(bulb) || bulb;
     const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
     const isValidAction = ['on', 'off'].includes(action);
 
@@ -93,49 +78,7 @@ app.post('/api/voice-command', async (req: Request, res: Response): Promise<any>
 });
 
 
-app.post('/webhook', async (req: Request, res: Response) => {
-  try {
-    const { transcript } = req.body;
 
-    if (!transcript || typeof transcript !== 'string') {
-      res.status(400).json({ message: 'Invalid request: transcript missing' });
-      return;
-    }
-
-    const lower = transcript.toLowerCase();
-
-    const bulb = extractBulbName(lower);
-    let action: 'on' | 'off' | null = null;
-
-    if (lower.includes('turn on') || lower.includes('switch on')) action = 'on';
-    else if (lower.includes('turn off') || lower.includes('switch off')) action = 'off';
-
-    if (!bulb || !action) {
-      res.status(400).json({ message: 'Could not understand command' });
-      return;
-    }
-
-    bulbState = {
-      ...bulbState,
-      [bulb]: action === 'on',
-    };
-
-    broadcastState(bulbState);
-
-    res.json({ success: true, state: bulbState });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-function extractBulbName(text: string): 'kitchen' | 'bedroom' | 'hall' | null {
-  const lc = text.toLowerCase();
-  if (lc.includes('kitchen')) return 'kitchen';
-  if (lc.includes('bedroom')) return 'bedroom';
-  if (lc.includes('hall')) return 'hall';
-  return null;
-}
 
 
 const PORT = process.env.PORT || 8001;
