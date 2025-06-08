@@ -77,6 +77,31 @@ app.post('/api/voice-command', async (req: Request, res: Response): Promise<any>
   }
 });
 
+app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
+  try {
+    // console.log('Raw body:', req.body);
+
+    // Parse the stringified JSON inside "arguments"
+    const parsedArgs = JSON.parse(req.body?.function?.arguments || '{}');
+    const { bulb, action } = parsedArgs;
+
+    console.log('Extracted -> bulb:', bulb, 'action:', action);
+
+    if (!bulb || !action) {
+      return res.status(400).json({ message: 'Missing bulb or action' });
+    }
+
+    // Continue with bulb/action logic
+    // Emit to WebSocket or update state here...
+
+    return res.status(200).json({ message: `${bulb} bulb turned ${action}` });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 
 
