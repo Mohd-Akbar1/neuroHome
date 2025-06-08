@@ -43,18 +43,28 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Smart Home API is live!');
 });
 
-app.post('/api/voice-command', async (req:Request, res:Response):Promise<any> => {
+app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
   try {
-    const toolCall = req.body?.message?.toolCalls?.[0];
+    const toolCall = req.body;
+    console.log('Vapi tool call:', toolCall);
 
-    if (!toolCall || !toolCall.function?.arguments) {
-      return res.status(400).json({ message: 'Invalid function call structure' });
+    if (!toolCall || !toolCall.arguments) {
+      return res.status(400).json({ message: 'Invalid tool call structure' });
     }
 
-    const args = JSON.parse(toolCall.function.arguments);
-    console.log('args', args);
+    // Parse arguments - it might be a string or object
+    let args: any;
+    if (typeof toolCall.arguments === 'string') {
+      args = JSON.parse(toolCall.arguments);
+    } else {
+      args = toolCall.arguments;
+    }
+
+    console.log('Vapi tool call args:', args);
+
     let { bulb, action } = args;
 
+    // Sanitize/clean input
     bulb = extractBulbName(bulb) || bulb;
     const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
     const isValidAction = ['on', 'off'].includes(action);
@@ -72,15 +82,16 @@ app.post('/api/voice-command', async (req:Request, res:Response):Promise<any> =>
 
     return res.json({
       success: true,
-      state: bulbState,
       message: `Turned ${action} the ${bulb} light.`,
+      state: bulbState,
     });
 
   } catch (error) {
-    console.error('Error processing Vapi request:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error handling voice command:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 app.post('/webhook', async (req: Request, res: Response) => {
   try {
