@@ -44,38 +44,38 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Smart Home API is live!');
 });
 
-app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { bulb, action } = req.body;
-    console.log("data body",JSON.stringify(req.body))
+// app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
+//   try {
+//     const { bulb, action } = req.body;
+//     console.log("data body",JSON.stringify(req.body))
 
-    console.log('Received from Vapi:', { bulb, action });
+//     console.log('Received from Vapi:', { bulb, action });
 
-    const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
-    const isValidAction = ['on', 'off'].includes(action);
+//     const isValidRoom = ['kitchen', 'bedroom', 'hall'].includes(bulb);
+//     const isValidAction = ['on', 'off'].includes(action);
 
-    if (!isValidRoom || !isValidAction) {
-      return res.status(400).json({ message: 'Invalid bulb or action' });
-    }
+//     if (!isValidRoom || !isValidAction) {
+//       return res.status(400).json({ message: 'Invalid bulb or action' });
+//     }
 
-    bulbState = {
-      ...bulbState,
-      [bulb]: action === 'on',
-    };
+//     bulbState = {
+//       ...bulbState,
+//       [bulb]: action === 'on',
+//     };
 
-    broadcastState(bulbState);
+//     broadcastState(bulbState);
 
-    return res.json({
-      success: true,
-      message: `Turned ${action} the ${bulb} light.`,
-      state: bulbState,
-    });
+//     return res.json({
+//       success: true,
+//       message: `Turned ${action} the ${bulb} light.`,
+//       state: bulbState,
+//     });
 
-  } catch (error) {
-    console.error('Error handling voice command:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-});
+//   } catch (error) {
+//     console.error('Error handling voice command:', error);
+//     return res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
 
 app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
   try {
