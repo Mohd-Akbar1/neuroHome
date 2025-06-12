@@ -50,6 +50,8 @@ app.post('/api/voice-command', async (req: Request, res: Response): Promise<any>
       // console.log(req.body)
       // const {bulb,action} =req.body
     console.log("data body",JSON.stringify(req.body))
+    let bulb='kitchne'
+    let action='on'
 
     console.log('Received from Vapi:', { bulb, action });
 
