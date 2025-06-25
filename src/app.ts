@@ -47,7 +47,7 @@ app.get('/', (req: Request, res: Response) => {
 app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
   try {
      
-      const {bulb,action} =req.body
+      const {bulb,action} =req.body.message.toolCalls[0].function.arguments
     console.log("data body",JSON.stringify(req.body))
   
 
