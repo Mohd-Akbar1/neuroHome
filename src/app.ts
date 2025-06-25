@@ -19,9 +19,9 @@ const io = new Server(server, {
 });
 
 let bulbState: Record<string, boolean> = {
-  kitchen: true,
-  bedroom: true,
-  hall: true,
+  kitchen: false,
+  bedroom: false,
+  hall: false,
 };
 // Broadcast latest bulb state to all connected clients
 function broadcastState(state: typeof bulbState) {
@@ -46,12 +46,10 @@ app.get('/', (req: Request, res: Response) => {
 
 app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
   try {
-      // const {bulb,action}=req.body.message.toolCalls[0].arguments
-      // console.log(req.body)
-      // const {bulb,action} =req.body
+     
+      const {bulb,action} =req.body
     console.log("data body",JSON.stringify(req.body))
-    let bulb='kitchne'
-    let action='on'
+  
 
     console.log('Received from Vapi:', { bulb, action });
 
@@ -80,31 +78,6 @@ app.post('/api/voice-command', async (req: Request, res: Response): Promise<any>
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
-// 
-// app.post('/api/voice-command', async (req: Request, res: Response): Promise<any> => {
-//   try {
-//     // console.log('Raw body:', req.body);
-
-    
-  
-//     const {bulb,action}=req.body.message.toolCalls[0].arguments
-    
-
-//     console.log('Extracted -> bulb:', bulb, 'action:', action);
-
-//     if (!bulb || !action) {
-//       return res.status(400).json({ message: 'Missing bulb or action' });
-//     }
-
-//     // Continue with bulb/action logic
-   
-
-//     return res.status(200).json({ message: `${bulb} bulb turned ${action}` });
-//   } catch (error) {
-//     console.error('Error:', error);
-//     return res.status(500).json({ message: 'Internal server error' });
-//   }
-// });
 
 
 
